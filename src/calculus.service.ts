@@ -20,8 +20,7 @@ export class CalculusService {
 // I use tsc as reference for some types.
 // https://github.com/microsoft/TypeScript/blob/main/src/compiler/types.ts#L21
 
-// TODO: Check if this is the best way to do it
-enum SyntaxKind {
+export const enum SyntaxKind {
 	NumericLiteral = "NumericLiteral",
 	Minus = "Minus",
 	Plus = "Plus",
@@ -29,57 +28,99 @@ enum SyntaxKind {
 	Divide = "Divide",
 	LeftParenthesis = "LeftParenthesis",
 	RightParenthesis = "RightParenthesis",
-	Whitespace = "Whitespace",
-	EOL = "EOL",
+	EOF = "EOF",
+	WhiteSpace = "WhiteSpace",
 }
 
-type Token =
+export type Token =
 	| {
-			type: Omit<SyntaxKind, "Number">;
+			type: Exclude<SyntaxKind, SyntaxKind.EOF>;
+			value: string;
 	  }
-	| {
-			type: SyntaxKind.NumericLiteral;
-			value: number;
-	  };
+	| { type: SyntaxKind.EOF };
+
+type Matcher = { type: SyntaxKind; regex: RegExp };
 
 /**
  * @internal Do not use this class directly. Use the `CalcusService` instead.
  */
 export class Lexer {
 	// https://stackoverflow.com/questions/51139881/visual-code-fold-comments <-- Regions hack for VSCode
-	private static matchers: Array<{ matcherType: SyntaxKind; matcher: RegExp }> = [
+	private static matchers: Array<Matcher> = [
 		//Number (e.g. 2, 23)
-		{ matcherType: SyntaxKind.NumericLiteral, matcher: /\d+/ },
+		{ type: SyntaxKind.NumericLiteral, regex: /\d+/ },
 		//#region Operators
 		//Plus
-		{ matcherType: SyntaxKind.Plus, matcher: /\+/ },
+		{ type: SyntaxKind.Plus, regex: /\+/ },
 		//Minus
-		{ matcherType: SyntaxKind.Minus, matcher: /\-/ },
+		{ type: SyntaxKind.Minus, regex: /\-/ },
 		//Multiplication
-		{ matcherType: SyntaxKind.Multiply, matcher: /\*/ },
+		{ type: SyntaxKind.Multiply, regex: /\*/ },
 		//Division
-		{ matcherType: SyntaxKind.Divide, matcher: /\// },
+		{ type: SyntaxKind.Divide, regex: /\// },
 		//#endregion
 		//#region Parenthesis
 		//Left parenthesis
-		{ matcherType: SyntaxKind.LeftParenthesis, matcher: /\(/ },
+		{ type: SyntaxKind.LeftParenthesis, regex: /\(/ },
 		//Right parenthesis
 		//#endregion
-		{ matcherType: SyntaxKind.RightParenthesis, matcher: /\)/ },
-		//Whitespace (e.g. " ", "  ", "   ")
-		{ matcherType: SyntaxKind.Whitespace, matcher: /\s+/ },
-		//EOL regex
-		{ matcherType: SyntaxKind.Whitespace, matcher: /\n/ },
+		{ type: SyntaxKind.RightParenthesis, regex: /\)/ },
+		{ type: SyntaxKind.WhiteSpace, regex: /\s+/ },
 	];
 
+	/**
+	 *
+	 * @param input
+	 * @returns An array of tokens, removes all whitespace tokens.
+	 */
 	static tokenize(input: string): Array<Token> {
-		//TODO: Implement
-		throw new Error("Not implemented");
+		const tokens: Array<Token> = [];
+		let slicedInput = input;
+
+		while (true) {
+			const token = this.getNextToken(slicedInput);
+			//Skip whitespace
+			if (token.type === SyntaxKind.WhiteSpace) {
+				slicedInput = slicedInput.slice(token.value.length);
+				continue;
+			}
+			tokens.push(token);
+			//Break under EOF
+			if (token.type === SyntaxKind.EOF) {
+				break;
+			}
+			slicedInput = slicedInput.substring(token.value.length);
+		}
+		return tokens;
 	}
 
+	/**
+	 *
+	 * @param input The input string for returning the next token, does not modify the input string.
+	 * @throws Error if the input string doesn't have a valid token.
+	 * @returns the next token
+	 */
 	static getNextToken(input: string): Token {
-		//TODO: Implement
-		throw new Error("Not implemented");
+		if (input.length === 0) {
+			return { type: SyntaxKind.EOF };
+		}
+		let match: null | { matchResult: RegExpMatchArray; matcher: Matcher } = null;
+		{
+			for (const matcher of this.matchers) {
+				const matchResult = input.match(matcher.regex);
+				if (!!matchResult && matchResult.index === 0) {
+					match = { matcher, matchResult };
+					break;
+				}
+			}
+		}
+		if (!match) {
+			throw new Error(`Unexpected token "${input[0]}"`);
+		}
+		return {
+			type: match.matcher.type,
+			value: match.matchResult[0]!,
+		};
 	}
 }
 
