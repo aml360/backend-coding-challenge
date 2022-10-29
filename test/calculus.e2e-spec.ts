@@ -15,14 +15,13 @@ describe("AppController (e2e)", () => {
 		await app.init();
 	});
 
-	// TODO: Add e2e tests
-	it("/ (GET)", () => {
+	it("Should return a result from a valid expression", () => {
 		const queryB64 = Buffer.from("2 * (23/(3*3))- 23 * (2*3)").toString("base64");
 		const result = 2 * (23 / (3 * 3)) - 23 * (2 * 3);
 		return request(app.getHttpServer())
 			.get("/calculus")
 			.query({ query: queryB64 })
 			.expect(200)
-			.expect("Hello World!");
+			.expect({ error: false, result });
 	});
 });
