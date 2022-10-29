@@ -1,0 +1,44 @@
+{
+	"compilerOptions": {
+		"lib": ["es5", "es6", "ES2022"],
+		"alwaysStrict": true,
+		"outDir": "./dist",
+		"baseUrl": "./",
+		// "rootDir": "./src",
+		"allowJs": true,
+		"checkJs": true, // <-- uncomment if allowJs is true
+		"skipLibCheck": true,
+		"emitDecoratorMetadata": true,
+		"forceConsistentCasingInFileNames": true,
+		"noEmit": false,
+		"esModuleInterop": true,
+		"experimentalDecorators": true,
+		"allowSyntheticDefaultImports": true,
+		"target": "ES2020",
+		"module": "CommonJS",
+		"moduleResolution": "Node",
+		"isolatedModules": true,
+		"incremental": true,
+		"declaration": true,
+		"importHelpers": true,
+		"tsBuildInfoFile": "./dist/.tsbuildinfo",
+		"jsx": "preserve",
+		"jsxImportSource": "@emotion/react",
+		// Type Checking
+		// https://www.typescriptlang.org/tsconfig#Type_Checking_6248
+		"strict": true,
+		// All checks that are not part of "strict"
+		"allowUnreachableCode": false,
+		"allowUnusedLabels": false,
+		"exactOptionalPropertyTypes": true,
+		"noFallthroughCasesInSwitch": true,
+		"noImplicitOverride": true,
+		"noImplicitReturns": true,
+		"noPropertyAccessFromIndexSignature": true,
+		"noUncheckedIndexedAccess": true
+		/* "paths": {
+      "tslib": ["./node-modules/tslib/tslib.d.ts"]
+    } */
+	},
+	"exclude": ["node_modules", "dist"]
+}
