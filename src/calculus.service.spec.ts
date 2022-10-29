@@ -1,6 +1,15 @@
 //Define tests with jest for the calculus service, especially the lexer, parser and evaluator
 
-import { CalculusService, Lexer, SyntaxKind, Token } from "./calculus.service";
+import {
+	BinaryExpression,
+	CalculusService,
+	Evaluator,
+	Lexer,
+	NumericLiteralExpression,
+	Parser,
+	SyntaxKind,
+	Token,
+} from "./calculus.service";
 
 describe("Calculus service", () => {
 	let calcSv: CalculusService;
@@ -148,7 +157,51 @@ describe("Calculus service", () => {
 		});
 	});
 
-	describe("Parser", () => {});
+	describe("Parser", () => {
+		describe("Simple expressions parsing", () => {
+			it("2", () => {
+				// TODO: Refactor this without using the Lexer
+				const result = Parser.parse(Lexer.tokenize("2"));
+				expect(result).toBeInstanceOf(NumericLiteralExpression);
+				expect((result as NumericLiteralExpression).value).toBe(2);
+			});
+			it("2+3", () => {
+				// TODO: Refactor this without using the Lexer
+				const result = Parser.parse(Lexer.tokenize("2+3"));
+				expect(result).toBeInstanceOf(BinaryExpression);
+				const resultBin = result as BinaryExpression;
+				expect(resultBin.left).toBeInstanceOf(NumericLiteralExpression);
+				expect((resultBin.left as NumericLiteralExpression).value).toBe(2);
+				expect(resultBin.right).toBeInstanceOf(NumericLiteralExpression);
+				expect((resultBin.right as NumericLiteralExpression).value).toBe(3);
+				expect(resultBin.operator).toBe(SyntaxKind.Plus);
+			});
+		});
+	});
 
-	describe("Evaluator", () => {});
+	describe("Evaluator", () => {
+		// TODO: Same as parser tests, we depend on lexer and parser here
+		it("2", () => {
+			const result = Evaluator.eval(Parser.parse(Lexer.tokenize("2")));
+			expect(result).toBe(2);
+		});
+		it("2+3", () => {
+			const result = Evaluator.eval(Parser.parse(Lexer.tokenize("2+3")));
+			expect(result).toBe(5);
+		});
+		it("2+3*4", () => {
+			const result = Evaluator.eval(Parser.parse(Lexer.tokenize("2+3*4")));
+			expect(result).toBe(14);
+		});
+		it("(-2 +3)*5 /2", () => {
+			const result = Evaluator.eval(Parser.parse(Lexer.tokenize("(-2 +3)*5 /2")));
+			console.log(result);
+
+			expect(result).toBe(2.5);
+		});
+		it("   2 + 3* ((4 + -5))", () => {
+			const result = Evaluator.eval(Parser.parse(Lexer.tokenize("   2 + 3* ((4 + -5))")));
+			expect(result).toBe(-1);
+		});
+	});
 });

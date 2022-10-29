@@ -6,6 +6,7 @@ import {
 	UsePipes,
 	ValidationPipe,
 } from "@nestjs/common";
+import { plainToInstance } from "class-transformer";
 import { CalculusService } from "./calculus.service";
 import { CalculusDTO } from "./DTO/calculus.dto";
 
@@ -32,9 +33,29 @@ export class CalculusController {
 		// Error handling with try-catch or rust style Result type?
 		try {
 			const result = this.calculusSv.evaluateExpression(query);
+			this.calculusSv.addToHistory(
+				plainToInstance(
+					CalculusDTO.HistoryResult,
+					{
+						result,
+						query,
+						timestamp: new Date(),
+					} /* satisfies CalculusDTO.HistoryResult (ts 4.9+)*/,
+				),
+			);
 			return { error: false, result };
 		} catch (error) {
 			if (error instanceof Error) {
+				this.calculusSv.addToHistory(
+					plainToInstance(
+						CalculusDTO.HistoryError,
+						{
+							message: error.message,
+							query,
+							timestamp: new Date(),
+						} /* satisfies CalculusDTO.HistoryError (ts 4.9+)*/,
+					),
+				);
 				return { error: true, message: error.message };
 			}
 			console.error("CalculusSv threw an error that is not an instance of Error, error:", error);
@@ -44,8 +65,6 @@ export class CalculusController {
 
 	@Get("history")
 	getHistory(): CalculusDTO.History {
-		// TODO: Implement
-		throw new Error("Not implemented");
-		// return { data: this.calculusSv.getHistory() };
+		return { data: this.calculusSv.getHistory() };
 	}
 }
